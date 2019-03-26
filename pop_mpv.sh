@@ -2,7 +2,7 @@
 #
 # Created by Siddharth Dushantha (sdushantha)
 #
-# Dependencies: xdotool, mpv, xclip
+# Dependencies: xdotool, mpv, xclip, youtube-dl
 # 
 # This script lets you pop almost any video from your web browser
 # into mpv. If you are not using a browser, then the script will
@@ -23,7 +23,7 @@
 # of your web browser (e.g Google Chrome, Opera, etc.)
 
 
-# Edit this will the name of your web browser
+# Edit this with the name of your web browser
 WEB_BROWSER="Mozilla Firefox"
 
 # Checking if the user is currently on the web browser
@@ -45,7 +45,7 @@ fi
 URL=$(xclip -selection clipboard -o)
     
 notify-send "mpv" "Fetching video..."
-mpv $URL
+mpv $URL 
 
 # Get the exit code if mpv
 STATUS=$?
@@ -54,4 +54,5 @@ if [ $STATUS -ne 0 ];then
     notify-send "mpv" "Failed to fetch the video"
     exit
 fi
+
 
