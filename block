@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+if [ "$EUID" -ne 0 ];then
+    echo "Please run with sudo"
+  exit
+fi
+
+sites=$(cat <<-END
+###BLOCKED WHILE STUDYING###
+0.0.0.0    stackoverflow.com
+0.0.0.0    github.com
+0.0.0.0    gist.github.com
+0.0.0.0    reddit.com
+0.0.0.0    www.reddit.com
+0.0.0.0    hackerone.com
+0.0.0.0    www.hackerone.com
+0.0.0.0    instagram.com
+0.0.0.0    www.instagram.com
+END
+)
+echo $sites >> /etc/hosts
+echo "Sites blocked, now you can study! 😄"
