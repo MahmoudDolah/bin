@@ -12,7 +12,6 @@ cp $1 $path
 # Set the wallpaper using feh
 feh --bg-fill $path*
 
-printf "Updating betterlockscreen image... "
 # Updates the image for betterlockscreen
 betterlockscreen -u $path* &> /dev/null
-printf "Done!"
+notify-send "ranger" "Image set as wallpaper and lockscreen"
