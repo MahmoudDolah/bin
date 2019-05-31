@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
+# Requires xcwd
+# https://github.com/schischi/xcwd
+
 import sys
 import subprocess
 import i3ipc
+import os
 
 i3 = i3ipc.Connection()
 
@@ -14,7 +18,7 @@ def on(i3, e):
     sys.exit(0)
 
 
-subprocess.Popen(['kitty', '--title', 'ranger', 'ranger'], close_fds=True)
+os.popen("kitty --title ranger ranger -d $(xcwd)")
 
 i3.on('window::new', on)
 try:

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-
+#
+# This only works on Macbooks.
+# This script was used to do some testing on another
+# project: macbook-keyboard-visualizer
 
 show_help(){
     echo "usage: flash [OPTION]"

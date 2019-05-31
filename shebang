@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#
+# Since I cant remember the shebangs, this script
+# is a quick way of getting the shebangs of certain
+# lanuages
+
+
+while true; do
+    case "$1" in
+        bash)
+            echo "#!/usr/bin/env bash"
+            exit
+            ;;
+        python)
+            echo "#!/usr/bin/env python3"
+            exit
+            ;;
+        *)
+            exit
+            ;;
+    esac
+done

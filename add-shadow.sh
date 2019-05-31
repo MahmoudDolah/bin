@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script adds a cool shadow effect to images, just like MacOS screenshots.
 # I usually use this for screenshots that I take with scrot

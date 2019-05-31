@@ -1,8 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+#
+# Requires xcwd
 
 import sys
 import subprocess
 import i3ipc
+import os
 
 i3 = i3ipc.Connection()
 
@@ -16,7 +19,12 @@ def on(i3, e):
 
 
 workspace_empty = i3.get_tree().find_focused().type == 'workspace'
-subprocess.Popen(['kitty', '--title', 'kitty'], close_fds=True)
+
+# Not sure why, but when adding $(xcwd) to the list, it does not work properly
+# thats why I am using os.popen() instead.
+#subprocess.Popen(['kitty', '--title', 'kitty', '-d','"$(xcwd)"'], close_fds=True)
+
+os.popen("kitty --title kitty -d $(xcwd)")
 
 if not workspace_empty:
     sys.exit(0)

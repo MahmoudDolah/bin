@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# Convert Nerd Font codes to actual icons 
+# save them to the clipboard
+printf "\u$1" | xsel -i -b

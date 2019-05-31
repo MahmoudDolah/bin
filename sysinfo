@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
  
 # or use wm array -- add any that need to be recognized
 wms=( 2bwm 2wm 9wm aewm afterstep ahwm alopex amiwm antiwm awesome blackbox bspwm catwm clfswm ctwm cwm dminiwm dragonflywm dwm echinus \
