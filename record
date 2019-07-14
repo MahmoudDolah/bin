@@ -43,6 +43,9 @@ record_window(){
     ffmpeg -y -f x11grab -framerate 60 -s ${width}x${height} -i :1+${x},${y} -f alsa -i default -r 30 -strict -2 -c:v libx264rgb -c:a flac $FNAME
 }
 
+# Parse the arguments
+options=$(getopt -o h --long f:,s,help -- "$@")
+eval set -- "$options"
 
 while true; do
     case "$1" in
@@ -56,6 +59,7 @@ while true; do
             ;;
         *)
             record_full_screen
+            break
             ;;
     esac
     shift

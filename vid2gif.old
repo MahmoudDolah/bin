@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# Make a directory to save the frames in
+mkdir .frames
+
+VIDEO_NAME=$1
+
+echo -e "[\033[1mI\033[0m] Using video \033[1m$VIDEO_NAME\033[0m"
+echo -e "[\033[1mI\033[0m] Extracting frames from video"
+
+# Using ffmpeg, we will extract all of the frames and save then in the .frames
+# directory
+ffmpeg -i $VIDEO_NAME -r 5 '.frames/frame-%03d.jpg' &> /dev/null
+
+# Change directory into .frames so that we can use the images in there to
+# create the GIF file
+cd .frames
+
+# Take first part of the VIDEO_NAME and just add gif to the end
+#  Exmaple:
+#    Video name is: hello.mp4
+#    We take this   ^^^^^^    and add gif to the end
+#    Therefore, GIF name will be hello.gif
+GIF_NAME=$(echo $VIDEO_NAME | grep -oE "^(.+?)\.")gif
+
+echo -e "[\033[1mI\033[0m] Putting frames together"
+convert -delay 20 -loop 0 *.jpg $GIF_NAME &> /dev/null
+
+# Move the GIF out of the .frames directory, and to the directory the command
+# run from
+mv $GIF_NAME ../
+
+# Get out of the .frames directory
+cd ..
+
+# Clean up the mess we made :)
+rm -rf .frames
+
+echo -e "[\033[1mI\033[0m] Saved GIF as \033[1m$GIF_NAME\033[0m"
