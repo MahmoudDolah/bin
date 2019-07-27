@@ -23,5 +23,5 @@ bash $HOME/bin/ranger/color.sh
 
 # Updates the image for betterlockscreen
 betterlockscreen -u $path* &> /dev/null
-notify-send "ranger" "Image set as wallpaper and lockscreen"
+dunstify "ranger" "Image set as wallpaper and lockscreen"
 

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+hex_to_rgb() {
+    # Taken from Dylans bash bible and modified
+    # to my liking
+    : "${1/\#}"
+    ((r=16#${_:0:2},g=16#${_:2:2},b=16#${_:4:2}))
+}
+
+# Get the hex color with the hashtag
+hash_hex=$(colorpicker -o -s)
+
+# Remove the hashtag
+hex="${hash_hex//\#}"
+
+# Print the bash ANSI RGB color code
+hex_to_rgb $hex
+
+# Get the file name of the terminal connected to standard input
+tty=$(tty)
+
+# We have to remove the space between BLUE and the letter m
+# because if we keep them together, bash will think that $bm
+# is a variable.
+# Since we want to pipe the text into our clipboard and show it on the
+# terminal at the same time, we use tee and send it to our curren tty.
+echo "\e[38;2;$r;$g;$b m"  | tr -d ' ' | tee $tty | xclip -selection c
+
+

@@ -23,11 +23,11 @@ BG_COLOR=$(sed '1q;d' "$COLOR_FILE")
 
 set_kitty() {
     KITTY_CONFIG="$HOME/.config/kitty/kitty.conf"
-    BASHRC="$HOME/.zshrc"
+    ZSHRC="$HOME/.zshrc"
 
     # Set the color
     sed -i s/"^background.*/background $BG_COLOR"/g $KITTY_CONFIG
-    sed -i "s/BG_COLOR=\".*/BG_COLOR=\"$BG_COLOR\"/g" $BASHRC
+    sed -i "s/BG_COLOR=\".*/BG_COLOR=\"$BG_COLOR\"/g" $ZSHRC
 
     for tty in /dev/pts/[0-9]*; do
         [[ -w $tty ]] &&
