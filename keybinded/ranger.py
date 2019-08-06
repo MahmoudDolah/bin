@@ -18,7 +18,7 @@ def on(i3, e):
     sys.exit(0)
 
 
-os.popen("kitty --title ranger ranger -d $(xcwd)")
+os.popen("kitty -d $(xcwd) -e ranger ")
 
 i3.on('window::new', on)
 try:

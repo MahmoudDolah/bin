@@ -9,5 +9,5 @@
 if pgrep -x ncmpcpp > /dev/null
 then
     echo 1
-else dunstify -r 123 "Now Playing ♫" "$(mpc current)"
+else dunstify -r 123 "Now Playing" "$(mpc current)"
 fi
