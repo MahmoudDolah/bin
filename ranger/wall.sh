@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+#
 # This script is used to change my wallpaper and the image for
 # my lockscreen. It also changes the background of some of programs
 # why using pywal to extract the colors from the image.
@@ -8,7 +8,7 @@
 
 # This is where the wallpaper which is going to be used is stored
 path="$HOME/pictures/current/"
-echo "Running..."
+
 # Delete current wallpaper
 rm $path*
 

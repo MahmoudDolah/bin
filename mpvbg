@@ -1,0 +1,18 @@
+#!/bin/sh
+set -x
+#
+# http://github.com/mitchweaver/bin
+#
+# play a video on the root window with mpv
+#
+
+pkill -9 xwinwrap
+
+xwin="xwinwrap -g $(xrandr --query | grep 'primary' | grep -o '[0-9][0-9]*x[0-9][0-9]*[^ ]*') -ni -fdt -un -b -nf -ov -fs -- "
+
+mpv="mpv --wid WID --no-config --keepaspect=no --loop \
+    --no-border --vd-lavc-fast --x11-bypass-compositor=no \
+    --gapless-audio=yes --vo=xv --hwdec=auto --really-quiet \
+    --name=mpvbg"
+
+$xwin $mpv "$1" > /dev/null 2>&1 &

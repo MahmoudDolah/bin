@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# A simple script to cut a video from x to y.
+#
+# Example:
+#   video-cut myvideo.mp4 00:01 00:12 newvide.mp4
+#
+# The output filename is optional.
+#
+
+VIDEO="$1"
+FROM="$2"
+TO="$3"
+OUTPUT="$4"
+
+# Get the name of the file given. So myvideo.mp4 would become myvideo.
+# This output name is only used if the user does not specify a file name.
+NAME="${VIDEO%.*}"
+
+# Extention of the file given. This is extention name is only used if the user
+# does not specify a filename
+EXT="${VIDEO#*.}"
+
+echo -e "[\033[1mI\033[0m] using video \033[1m$VIDEO\033[0m"
+echo -e "[\033[1mI\033[0m] cutting from \033[1m$FROM\033[0m to \033[1m$TO\033[0m"
+
+# If the user has not specified a output filename, then get the count of files
+# with the same NAME and then include that count in the new filename
+[[ ${#OUTPUT} -eq 0 ]] && OUTPUT=$NAME$(ls $NAME*.$EXT | wc -l).$EXT
+
+# This is where the actual cutting happens
+ffmpeg -i $VIDEO -ss $FROM -t $TO -async 1 $OUTPUT &> /dev/null
+echo -e "[\033[1mI\033[0m] saved as \033[1m$OUTPUT\033[0m"
+
+
