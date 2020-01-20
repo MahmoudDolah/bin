@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+filename=$(basename -- "$1")
+filename="${filename%.*}"
+
+ffmpeg -hide_banner \
+    -loglevel panic \
+    -i "$1" \
+    -codec copy \
+    "$filename.mp4"
