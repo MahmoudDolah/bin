@@ -28,4 +28,4 @@ fi
 w3m_command="0;1;0;0;$width;$height;;;;;$FILENAME\n4;\n3;"
 
 tput cup $(($height/$FONTH)) 0
-echo -e $w3m_command|$W3MIMGDISPLAY
+printf $w3m_command|$W3MIMGDISPLAY
