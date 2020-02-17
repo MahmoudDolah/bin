@@ -18,7 +18,7 @@ def on(i3, e):
     sys.exit(0)
 
 
-os.popen("kitty -d $(xcwd) -e ranger ")
+os.popen("kitty -d $(xcwd) -e /home/siddharth/bin/utils/vifmrun")
 
 i3.on('window::new', on)
 try:
