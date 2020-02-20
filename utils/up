@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+URL=$(curl -s -F "file=@$1" https://0x0.st)
+echo "$URL" | xclip -sel clip
+notify-send "vifm" "File uploaded: $URL"
