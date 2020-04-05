@@ -1,187 +1,181 @@
 #!/bin/sh
 #
-# Blaze - record screen and audio
+# Source:
+#   https://github.com/GaugeK/blaze
+#
+# I actually use variable "word splitting" to my advantage
+#   shellcheck disable=SC2086 disable=SC2046
+#
+# I know && isn't if
+#   shellcheck disable=SC2015
 #
 
+trap 'pkill -2 -P $(cat /tmp/blaze-pid)' 15 2
+
+print() { printf "%b\n" "$@"; }
+
 deps() {
-	[ "$1" ] && {
-		md="$(for i in $deps; do printf " - \033[31m%s\033[0m\n" "$i"; done)"
-		printf "\033[31mYou are missing dependencies\033[0m\n"
-		printf "%b\n" "$md"
-		printf "\n"
+	[ "$1" ] || {
+		md="$(for i in $deps; do print " - \033[31m$i\033[0m"; done)"
+
+		print "\033[31mYou are missing dependencies\033[0m"
+		print "$md"
+		print
 	}
-	printf "\033[34mRequired dependencies\033[0m\n"
-	printf " - \033[34mffmpeg\033[0m          Actually recording\n"
-	printf " - \033[34mdmenu\033[0m           Selecting the options\n"
-	printf "\n"
-	printf "\033[35mAt least one of these is required\033[0m\n"
-	printf " - \033[35mxorg-xrandr\033[0m     Selecting a display to record\n"
-	printf " - \033[35mslop\033[0m            Selecting an area to record\n"
-	printf "\n"
-	printf "\033[32mOptional dependencies\033[0m\n"
-	printf " - \033[32mnotify-send\033[0m     Letting the user know when the recording starts/ends\n"
-	printf " - \033[32mxdg-desktop-dir\033[0m Use directory from xdg instead \$HOME/Videos\n"
+	print "\033[34mRequired dependencies\033[0m"
+	print " - \033[34mffmpeg\033[0m         Actually recording"
+	print " - \033[34mrofi\033[0m           Selecting the options"
+	print " - \033[34mpkill\033[0m          Ending the recordings"
+	print
+	print "\033[35mAt least one of these is required\033[0m"
+	print " - \033[35mmmutils\033[0m        Selecting a display to record"
+	print " - \033[35mslop\033[0m           Selecting an area to record"
+	print
+	print "\033[32mOptional dependencies\033[0m"
+	print " - \033[32mnotify-send\033[0m    Letting the user know when the recording starts/ends"
+	print
+	exit 1
 }
 
-# check all necessary dependencies
-_() { command -v "$1" >/dev/null 2>&1; }
+_() { command -v "$1" >/dev/null 2>&1 || deps="$deps $1"; }
 
-_ dmenu            || deps="$deps dmenu"
-_ ffmpeg           || deps="$deps ffmpeg"
-_ xrandr || _ slop || deps="$deps xorg-xrandr/slop"
+_ rofi
+_ pkill
+_ ffmpeg
+command -v mattr slop >/dev/null 2>&1 || deps="$deps mmutils/slop"
 
-[ "$deps" ] && { deps "$deps"; exit 1; }
+[ "$deps" ] && deps
 
-# output file, use $BLAZE_DIR and $BLAZE_FILE if they are set
-if [ ! "$BLAZE_DIR" ]; then
-	_ xdg-user-dir &&
-		BLAZE_DIR=$(xdg-user-dir VIDEOS 2>/dev/null) ||
-		BLAZE_DIR="$HOME/Videos"
-fi
 
-[ ! -d "$BLAZE_DIR" ] && mkdir -p "$BLAZE_DIR" >/dev/null 2>&1
-
-output="$BLAZE_DIR/${BLAZE_FILE:-blaze-$(date '+%Y-%m-%d_%H-%M-%S').mp4}"
-
-# menu to use
-m() { ${DMENU:-dmenu} "$@"; }
+m() {
+	rofi -dmenu -i "$@"
+}
 
 # exit if X isn't running
-[ ! "$DISPLAY" ] && { echo "Can't open display; exiting"; exit; }
+[ ! "$DISPLAY" ] &&
+	print "Can't open display; exiting" && exit
+
+# output file, use $BLAZE_DIR and $BLAZE_FILE if they are set
+output="${BLAZE_DIR:-$PWD}/${BLAZE_FILE:-blaze-$(date '+%Y-%m-%d_%H-%M-%S').mp4}"
 
 # find default audio device
 audio() {
 	pacmd="$(pacmd list-sources | grep -i -B 1 output)"
 	dev="$(echo "$pacmd" | grep -i '\* index' ||
 		echo "$pacmd" | grep -i 'index' | head -n 1)"
-	audio="-f pulse -i $(echo "$dev" | grep -o '[0-9]')"
-}
-
-kill_recording() {
-	if [ -f "/tmp/blaze-pid" ]; then
-		recpid="$(cat /tmp/blaze-pid)"
-		# kill with SIGTERM, allowing finishing touches.
-		kill -15 "$recpid"
-		rm -f /tmp/blaze-pid
-		echo "Recording Stopped"
-		# even after SIGTERM, ffmpeg may still run, so SIGKILL it.
-		( sleep 3; kill -9 "$recpid" ) >/dev/null 2>&1 &
-		notify-send -t 2000 "Recording Stopped"
-	else
-		echo "Recording isn't active"
-		notify-send -t 2000 "Recording isn't active"
-	fi
+	audio="-f -i $(echo "$dev" | grep -o '[0-9]')"
 }
 
 help() {
-	printf "\033[34mOptions\033[0m\n"
-	printf "  \033[34m-s / --save\033[0m        End the recording\n"
-	printf "  \033[34m-h / --help\033[0m        Display what you're reading right now\n"
-	printf "  \033[34m-d / --deps\033[0m        printf dependencies\n"
-	printf "  \033[34m-c / --confirm\033[0m     Don't ask if the user is ready to record\n"
-	printf "  \033[34m-p / --preset\033[0m   \033[35m[]\033[0m Save to and load from preset <x>\n"
-	printf "  \033[34m-r / --rate\033[0m     \033[35m[]\033[0m Force framerate\n"
-	printf "  \033[34m-b / --bitrate\033[0m  \033[35m[]\033[0m Force bitrate  (in MB)\n"
-	printf "  \033[34m-m / --method\033[0m   \033[35m[]\033[0m Force method   (slop, display)\n"
-	printf "  \033[34m-d / --display\033[0m  \033[35m[]\033[0m Force display  (Doesn't require -m)\n"
-	printf "  \033[34m-n / --nvenc\033[0m       Force disable NVENC\n"
-	printf "  \033[34m-S / --slop\033[0m        Options to use for slop (Needs to be quoted)\n"
-	printf "  \033[34m-a / --audio\033[0m       Record desktop audio\n"
-	printf "\n"
-	printf "To select an area, install 'slop',\n"
-	printf "to select a display, install 'xorg-xrandr'\n"
-	printf "\n"
-	printf "\033[35m[]\033[0m = Option requires a value\n"
-	printf "\n"
-	printf "Final argument not starting with \`-\` will be output file\n"
-	printf "\n"
-	printf "\033[34mVariables\033[0m\n"
-	printf "  \033[34mBLAZE_DIR\033[0m    Location to save the video\n"
-	printf "    \033[37mDefault:     xdg-user-dir VIDEOS or \$HOME/Videos\033[0m\n"
-	printf "\n"
-	printf "  \033[34mBLAZE_FILE\033[0m   Name of the saved video\n"
-	printf "    \033[37mDefault:     blaze-%s.mp4\033[0m\n" "\$(date +%Y-%m-%d_%H-%M-%S)"
-	printf "\n"
-	printf "  \033[34mBLAZE_SLOP\033[0m   Options to use for slop\n"
-	printf "    \033[37mDefault:     None\033[0m\n"
+	print "\033[34mOptions\033[0m"
+	print "  \033[34m-s / --save\033[0m        End the recording"
+	print "  \033[34m-h / --help\033[0m        Display what you're reading right now"
+	print "  \033[34m-d / --deps\033[0m        Print dependencies"
+	print "  \033[34m-c / --confirm\033[0m     Don't ask if the user is ready to record"
+	print "  \033[34m-p / --preset\033[0m   \033[35m[]\033[0m Save to and load from preset <x>"
+	print "  \033[34m-r / --rate\033[0m     \033[35m[]\033[0m Force framerate"
+	print "  \033[34m-b / --bitrate\033[0m  \033[35m[]\033[0m Force bitrate  (in MB)"
+	print "  \033[34m-m / --method\033[0m   \033[35m[]\033[0m Force method   (slop, display)"
+	print "  \033[34m-D / --display\033[0m  \033[35m[]\033[0m Force display  (Doesn't require -m)"
+	print "  \033[34m-n / --nvenc\033[0m       Force disable NVENC"
+	print "  \033[34m-S / --slop\033[0m        Options to use for slop (Needs to be quoted)"
+	print "  \033[34m-a / --audio\033[0m       Record desktop audio"
+	print
+	print "To select an area, install 'slop',"
+	print "to select a display, install 'pockata/mmutils'"
+	print
+	print "\033[35m[]\033[0m = Option requires a value"
+	print
+	print "Final argument not starting with \`-\` will be output file"
+	print
+	print "\033[34mVariables\033[0m"
+	print "  \033[34mBLAZE_DIR\033[0m    Location to save the video"
+	print "    \033[37mDefault:     Current directory\033[0m"
+	print
+	print "  \033[34mBLAZE_FILE\033[0m   Name of the saved video"
+	print "    \033[37mDefault:     'blaze-\$(date '+%Y-%m-%d_%H-%M-%S').mp4'\033[0m"
+	print
+	print "  \033[34mBLAZE_SLOP\033[0m   Options to use for slop"
+	print "    \033[37mDefault:     None\033[0m"
 }
 
 while [ "$1" ]; do
 	case "$1" in
 		-h|--help)    help                 ; exit   ;;
-		-d|--deps)    deps                 ; exit   ;;
-		-s|--save)    kill_recording       ; exit   ;;
+		-d|--deps)    deps -a              ; exit   ;;
+		-s|--save)    pkill blaze          ; exit   ;;
 		-c|--confirm) ready="yes"                   ;;
+		-p|--preset)  preset="$2"          ; shift  ;;
 		-b|--bitrate) bitrate="-b:v ${2}M" ; shift  ;;
 		-m|--method)  method="$2"          ; shift  ;;
 		-r|--rate)    rate="$2"            ; shift  ;;
 		-n|--nvenc)   nvenc="  "                    ;;
 		-D|--display) display="$2"
 		              method="display"     ; shift  ;;
-		-S|--slop)    sloptions="$2"
-		              method="selection"   ; shift  ;;
-		-p|--preset)  preset="$2"          ; shift  ;;
-		-a|--audio)   audio                         ;;
+		-S|--slop)    sloptions="$2"       ; shift  ;;
+		-a|--audio)   audio;;
 		--)           shift
 		              [ "$1" ] && output="$1"
-		                                     break  ;;
+		              break                         ;;
 		-*)           echo "Invalid option '$1'"
-		                                     exit   ;;
+		              exit                          ;;
 		*)            output="$1"          ; break  ;;
 	esac
 	shift
 done
 
-# exit if blaze is running
-[ -f /tmp/blaze-pid ] && { 
-	echo "Blaze is already running, exiting."
-	notify-send "Blaze is already running, exiting."
-	exit
-}
+[ "$BLAZE_DIR" ] &&
+	mkdir -p "$BLAZE_DIR" 2>/dev/null
 
-[ "$preset" ] && {
-	# create preset location
-	mkdir -p "$HOME"/.config/blaze
+[ -f /tmp/blaze-pid ] && echo "Blaze is already running, exiting." && exit
 
-	# load preset
-	preset_location="$HOME"/.config/blaze/"$preset"
+
+if [ "$preset" ]; then
+	# make the directory blaze presets are stored
+	mkdir -p "${XDG_CONFIG_HOME:-~/.config}/blaze" >/dev/null 2>&1
+
+	# the location of the current preset
+	preset_location="${XDG_CONFIG_HOME:-~/.config}/blaze/blaze-preset-$preset"
+
 	[ -f "$preset_location" ] &&
 		. "$preset_location"
-}
+fi
+
+
 
 # ask the user what method they want to use
-[ ! "$method" ] && {
-	# Check if the user has slop and disputils
-	_ slop   && s=s
-	_ xrandr && d=d
+if [ ! "$method" ]; then
+	# Check if the user has slop and mmutils
+	command -v slop  >/dev/null 2>&1 && s=s
+	command -v mattr >/dev/null 2>&1 && d=d
 
-	# if the user only has slop or disputils (But not both) use that
+	# if the user only has slop or mmutils (But not both) use that
 	[ "$s" ] && method=selection
 	[ "$d" ] && method=display
 
-	# if the user has both slop and disputils ask the user which one to use
+	# if the user has both slop and mmutils ask the user which one to use
 	[ "$s" ] && [ "$d" ] &&
-		method="$(printf "display\nselection" | m -p "Method of recording")"
-}
+		method="$(print "display\nselection" | m -p "Method of recording")"
+
+fi
 
 if [ "$method" = display ]; then
 
-	# get information about the display
-	monitors="$(xrandr --listmonitors | awk 'NR>1 { printf $NF"\n" }')"
+	# get information about the screen
+	lsm="$(lsm)"
 
 	# if there's only one display, use that and skip asking
-	if [ "$(printf "%b\n" "$monitors" | wc -l)" = 1 ]; then
-		display="$monitors"
+	if [ $(print "$lsm" | wc -l) = 1 ]; then
+		display="$lsm"
 	else  # if there are other displays ask the user which one to use
-		[ ! "$display" ] && display="$(printf "%b" "$monitors" | m -p "Display to record")"
+		[ ! "$display" ] && display="$(print "$lsm" | m -p "Display to record")"
 	fi
 
-	set -- $(xrandr -q | grep "$display" | grep -oP '\d*x\d*\+\d*\+\d*' | tr '+x' ' ')
-
-	width="$1"
-	height="$2"
-	offX="$3"
-	offY="$4"
+	# get information about the display
+	width="$(mattr  w "$display")"
+	height="$(mattr h "$display")"
+	offX="$(mattr x "$display")"
+	offY="$(mattr y "$display")"
 
 elif [ "$method" = selection ] || [ "$method" = slop ]; then
 
@@ -199,40 +193,38 @@ elif [ "$method" = selection ] || [ "$method" = slop ]; then
 
 else
 
-	printf "Invalid method; exiting\n"
+	print "Invalid method; exiting"
 	exit 1
 
 fi
 
-# detect if the user has a nvidia card and use nvenc
-[ ! "$nvenc" ] && lspci | grep -qi nvidia && nvenc="-vcodec h264_nvenc"
-
 # ask the user what they want the framerate of the video to be
-[ ! "$rate" ] && rate="$(printf "30\n60" | m -p "Framerate")"
+[ ! "$rate" ] && rate="$(print "30\n60" | m -p "Framerate")"
+
+
+if [ "$preset" ] && [ "$method" = display ]; then
+
+	print "rate=\"$rate\"
+display=\"$display\"
+[ ! \"\$bitrate\" ] &&
+	bitrate=\"$bitrate\"
+method=\"$method\"" > "$preset_location"
+
+fi
+
+# detect if the user has a nvidia card and use nvenc
+[ ! "$nvenc" ] && lspci | grep -qi nvidia && \
+	nvenc="-vcodec h264_nvenc"
+
 
 # ask the user if they want to start the recording
-[ ! "$ready" ] && ready="$(printf "yes\nno" | m -p "Start the recording")"
+[ ! "$ready" ] && ready="$(print "yes\nno" | m -p "Start the recording")"
 
-# save preset
-[ "$preset_location" ] && {
-	cat >"$preset_location"<<EOF
-[ ! "\$rate" ]    && rate="$rate"
-[ ! "\$bitrate" ] && bitrate="$bitrate"
-[ ! "\$audio" ]   && audio="$audio"
-[ ! "\$method" ]  && {
-	method="$method"
-	width="$width"
-	height="$height"
-	offX="$offX"
-	offY="$offY"
-}
-EOF
-}
-
-[ "$ready" = yes ] && {
+if [ "$ready" = yes ]; then
 	notify-send -t 1500 "Recording Started"
 
-	# -loglevel error   | makes ffmpeg only printf errors to the terminal
+	#
+	# -loglevel error   | makes ffmpeg only print errors to the terminal
 	# -y                | don't ask to start
 	# -draw_mouse 1     | show the mouse in the video
 	# -s                | specifies the size of the recording
@@ -241,6 +233,9 @@ EOF
 	# -pix_fmt yuv420p  | allows the video to be played on browsers like firefox
 	# -q:v              | changes the quality of the video, lower is better.
 	# "$output"         | file to save the recording to
+	#
+
+	echo $$ > /tmp/blaze-pid
 
 	ffmpeg                         \
 	  -loglevel error              \
@@ -253,9 +248,10 @@ EOF
 	  -i "$DISPLAY.0+$offX,$offY"  \
 	  $bitrate                     \
 	  -pix_fmt yuv420p             \
-	  $nvenc                      \
+	  $nvenc                       \
 	  -q:v 0                       \
-	  "$output" &
+	  "$output"
 
-	echo $! > /tmp/blaze-pid
-}
+	notify-send -t 2000 "Recording Stopped"
+	rm /tmp/blaze-pid
+fi
