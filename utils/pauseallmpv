@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
-for i in $(ls /tmp/mpvsoc*); do
-	echo '{ "command": ["set_property", "pause", true] }' | socat - $i;
+for i in /tmp/mpvsoc*; do
+    [[ -e "$i" ]] || break
+	echo '{ "command": ["set_property", "pause", true] }' | socat - "$i";
 done

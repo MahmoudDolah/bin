@@ -4,4 +4,4 @@
 # a custom fold because zf is not enough for me.
 # The reason why this is a script and not put directly
 # into my vimrc is because vim doesnt like the syntax
-sed -e '0,/^/s//{{{ <++> \n/' $1 | sed -e '$ a }}}'
+sed -e '0,/^/s//{{{ <++> \n/' "$1" | sed -e '$ a }}}'

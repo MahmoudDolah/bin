@@ -10,4 +10,4 @@ echo $! >/tmp/music.pid
 
 ncmpcpp
 
-kill -9 $(cat /tmp/kunst.pid) &> /dev/null
+kill -9 "$(cat /tmp/kunst.pid)" &> /dev/null

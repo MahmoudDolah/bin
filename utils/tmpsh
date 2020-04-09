@@ -5,5 +5,5 @@
 # open a shell in a temporary dir
 #
 
-cd $(mktemp -d)
+cd "$(mktemp -d)" || exit
 zsh

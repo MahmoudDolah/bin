@@ -32,7 +32,7 @@ function extract {
             *.zpaq)      zpaq x ./"$n"      ;;
             *.arc)         arc e ./"$n"       ;;
             *.cso)       ciso 0 ./"$n" ./"$n.iso" && \
-                              extract $n.iso && \rm -f $n ;;
+                              extract "$n.iso" && \rm -f "$n" ;;
             *)
                          echo "extract: '$n' - unknown archive method"
                          return 1
