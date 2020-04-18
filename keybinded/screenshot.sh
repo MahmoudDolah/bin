@@ -9,6 +9,7 @@ if [[ $1 = "-s" ]];then
     # Select an area or click a window to take a screenshot of 
     # just the window
     maim -s -u | xclip -selection clipboard -t image/png
+# v=$(maim -s -u) && printf "%s" "$v" | xclip -selection clipboard -t image/png
     xclip -o -selection clipboard -t image/png > $FNAME
     [[ $(dunstify -A "show,s" "Screenshot" "$(basename $FNAME)") == "show" ]] && mpv $FNAME
 else
