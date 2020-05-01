@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#
+# A very neat script which show the album art in and song info on music
+# change in mpd
+#
+# The extrct_cover function is take from Kunst written by sdushantha, but this
+# hack is written by sadparadiseinhell. 
 
 MUSIC_DIR=$HOME/music/
 COVER=/tmp/cover.png
@@ -14,21 +20,6 @@ extract_cover() {
         if [ ! $SILENT ];then 
             echo "extracted album art"
         fi
-	else
-        DIR="$MUSIC_DIR$(dirname "$(mpc current -f %file%)")"
-        if [ ! $SILENT ];then
-            echo "inspecting $DIR"
-        fi
-
-        for CANDIDATE in "$DIR/"[Cc]over""{.png,.jpg}; do
-            if [ -f "$CANDIDATE" ]; then
-                STATUS=0
-                convert "$CANDIDATE" $COVER &> /dev/null
-                if [ ! $SILENT ];then
-                    echo "found cover.png"
-                fi
-            fi
-        done
     fi
 
 	if [ $STATUS -ne 0 ];then
@@ -47,7 +38,7 @@ while true; do
         extract_cover
         
         if [ $STATUS -eq 0 ]; then
-            dunstify -r 3595 -i $COVER "$(mpc current -f "%title%\n%artist%\n%album%")"
+            dunstify -i $COVER "$(mpc current -f "%title%")" "$(mpc current -f "%artist% - %album%")"
         fi
 
         rm /tmp/cover.png
