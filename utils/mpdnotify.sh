@@ -38,7 +38,10 @@ while true; do
         extract_cover
         
         if [ $STATUS -eq 0 ]; then
-            dunstify -i $COVER "$(mpc current -f "%title%")" "$(mpc current -f "%artist% - %album%")"
+            # Using -r we can replace the id of this notification. The reason
+            # why we are doing this is so that the notifications dont stack
+            # on top of each other and instead, it kills the previous one
+            dunstify -r 6384 -i $COVER "$(mpc current -f "%title%")" "$(mpc current -f "%artist% - %album%")"
         fi
 
         rm /tmp/cover.png
