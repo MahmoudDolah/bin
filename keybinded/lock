@@ -11,7 +11,7 @@
 output=$(betterlockscreen -l)
 currenWall="$HOME/pictures/current/*"
 
-if [ $output == *"Could not open directory"* ]; then
+if [[ $output == *"Could not open directory"* ]]; then
     dunstify "Lockscreen" "Updating image..."
     betterlockscreen -u $currenWall
     betterlockscreen -l
