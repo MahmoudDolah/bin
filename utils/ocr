@@ -40,10 +40,8 @@ STATUS=$?
 # /tmp/ocr.txt.txt
 tesseract "$IMAGE_FILE" "${TEXT_FILE//\.txt/}"
 
-
 # Check if the text was detected by checking number
 # of lines in the file
-
 LINES=$(wc -l < $TEXT_FILE)
 if [ "$LINES" -eq 0 ]; then
     notify-send "ocr" "no text was detected"
