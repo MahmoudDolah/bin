@@ -6,34 +6,42 @@
 # The extrct_cover function is take from Kunst written by sdushantha, but this
 # hack is written by sadparadiseinhell. 
 
-
-mkdir -p /tmp/mpdnotify
-pidfile=/tmp/mpdnotify/pidfile
-
 MUSIC_DIR=$HOME/music/
 COVER=/tmp/cover.png
-SIZE=100x100
+
+pre_exit() {
+    # This functions holds all the commands
+    # to run when exiting the script
+    rm /tmp/mpdnotify
+}
 
 extract_cover() {
-
     ffmpeg -i "$MUSIC_DIR$(mpc current -f %file%)" $COVER -y &> /dev/null
 
 	STATUS=$?
 
-	if [ $STATUS -eq 0 ];then
-        if [ ! $SILENT ];then 
-            echo "extracted album art"
-        fi
+	if [ "$STATUS" -eq 0 ]; then
+        [ ! "$SILENT" ] && echo "extracted album art"
     fi
 
-	if [ $STATUS -ne 0 ];then
-        if [ ! $SILENT ];then
-            echo "error: file does not have an album art"
-        fi
+	if [ "$STATUS" -ne 0 ]; then
+        [ ! "$SILENT" ] && echo "error: file does not have an album art"
 	fi
 
 }
 
+# Prevent the user from doing CTRL+Z because that means
+# pre_exit will not be executed.
+trap "" SIGTSTP
+
+if [ -f /tmp/mpdnotify ]; then
+    echo "mpdnotify is already running"
+    exit 1
+else
+    # When the user presses CTRL+C, or the script justs exits, run pre_exit
+    trap pre_exit EXIT
+    touch /tmp/mpdnotify
+fi
 
 while true; do
     mpc current --wait &>/dev/null
