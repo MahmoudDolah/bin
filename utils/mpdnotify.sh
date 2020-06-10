@@ -6,6 +6,10 @@
 # The extrct_cover function is take from Kunst written by sdushantha, but this
 # hack is written by sadparadiseinhell. 
 
+
+mkdir -p /tmp/mpdnotify
+pidfile=/tmp/mpdnotify/pidfile
+
 MUSIC_DIR=$HOME/music/
 COVER=/tmp/cover.png
 SIZE=100x100
@@ -29,6 +33,7 @@ extract_cover() {
 	fi
 
 }
+
 
 while true; do
     mpc current --wait &>/dev/null
