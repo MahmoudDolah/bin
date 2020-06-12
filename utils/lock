@@ -10,14 +10,14 @@
 
 # Pause mpd and send the pause key to all mpv videos
 # before locking the screen
-mpc pause >/dev/null 2>&1
-pauseallmpv >/dev/null 2>&1
+mpc pause > /dev/null 2>&1
+pauseallmpv > /dev/null 2>&1
 
 output=$(betterlockscreen -l)
 currenWall="$HOME/pictures/current/*"
 
 if [[ $output == *"Could not open directory"* ]]; then
     dunstify "Lockscreen" "Updating image..."
-    betterlockscreen -u $currenWall
+    betterlockscreen -u "$currenWall"
     betterlockscreen -l
 fi
