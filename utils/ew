@@ -8,4 +8,4 @@
 # Quickly edit the source code of a command. This is pretty much a short
 # cut for doing --> vim $(which mycommand)
 
-$EDITOR $(which $1)
+$EDITOR "$(which "$1")"

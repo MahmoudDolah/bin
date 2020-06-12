@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # A very neat script which show the album art in and song info on music
 # change in mpd
@@ -16,23 +16,22 @@ pre_exit() {
 }
 
 extract_cover() {
-    ffmpeg -i "$MUSIC_DIR$(mpc current -f %file%)" $COVER -y &> /dev/null
-
+    ffmpeg -i "$MUSIC_DIR$(mpc current -f %file%)" $COVER -y > /dev/null 2>&1
 	STATUS=$?
 
 	if [ "$STATUS" -eq 0 ]; then
-        [ ! "$SILENT" ] && echo "extracted album art"
+        echo "extracted album art"
     fi
 
 	if [ "$STATUS" -ne 0 ]; then
-        [ ! "$SILENT" ] && echo "error: file does not have an album art"
+        echo "error: file does not have an album art"
 	fi
 
 }
 
 # Prevent the user from doing CTRL+Z because that means
 # pre_exit will not be executed.
-trap "" SIGTSTP
+trap "" TSTP
 
 if [ -f /tmp/mpdnotify ]; then
     echo "mpdnotify is already running"
@@ -44,10 +43,10 @@ else
 fi
 
 while true; do
-    mpc current --wait &>/dev/null
+    mpc current --wait > /dev/null 2>&1
     STATUS=$?
-    while true; do
 
+    while true; do
         extract_cover
         
         if [ $STATUS -eq 0 ]; then
@@ -60,7 +59,9 @@ while true; do
         rm /tmp/cover.png
 
         while true; do
-            mpc idle player &>/dev/null && (mpc status | grep "\[playing\]" &>/dev/null) && break
+            mpc idle player > /dev/null 2>&1
+            mpc status | grep "\[playing\]" > /dev/null 2>&1
+            break
         done
         
     done
