@@ -24,7 +24,7 @@ def main():
     try:
         url = sys.argv[1]
     except IndexError:
-        print("Error: No url was givin")
+        print("Error: No url was given")
         sys.exit(1)
 
     if not re.match(urlRegex, url):
