@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+#
+# by Siddharth Dushantha (sdushantha)
+#
+# [sub]domain [ex]tracter
+#
+# A simple script to extract all the subdomains found using subdomainfinder.c99.nl
+# and output it to STDOUT. This script also makes sure that dead subdomains
+# are not shown.
+#
+# Dependencies: requests, bs4
+#
+# Usage: python3 subex.py [url]
+#
+
+import sys
+import re
+import requests
+from bs4 import BeautifulSoup
+
+urlRegex = r"https:\/\/subdomainfinder\.c99\.nl\/scans\/\d{4}-\d{2}-\d{2}\/.*"
+
+def main():
+    try:
+        url = sys.argv[1]
+    except IndexError:
+        print("Error: No url was givin")
+        sys.exit(1)
+
+    if not re.match(urlRegex, url):
+        print("Error: Invalid url")
+        sys.exit()
+
+    r = requests.get(url)
+    html = r.text
+
+    if "Something went wrong" in html:
+        print("Error: The website is giving us an error. Please visit the url and check for further information.")
+        sys.exit()
+
+    s = BeautifulSoup(html, "lxml")
+
+    # Get all the elements from the result_table and exculde
+    # the first line as it contains the table headers.
+    result_table = s.find(id="result_table").findAll("tr")[1:]
+
+    for count, _ in enumerate(result_table):
+        information = result_table[count].findAll("td")
+        ip_address = information[2].text.strip()
+        subdomain = information[1].text.strip()
+
+        # The subdomain finder by c99 returns dead subdomains.
+        # I cannot say why, because I dont know what their
+        # method of finding these subdomains is. So just
+        # ignore the subdomains that dont have an IP address.
+        if ip_address == "none":
+            continue
+
+        print(subdomain)
+
+if __name__ == "__main__":
+    main()
