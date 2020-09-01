@@ -42,7 +42,7 @@ def main():
 
     # Get all the elements from the result_table and exculde
     # the first line as it contains the table headers.
-    result_table = s.find(id="result_table").findAll("tr")[1:]
+    result_table = s.findAll("table")[1].findAll("tr")[1:]
 
     for count, _ in enumerate(result_table):
         information = result_table[count].findAll("td")
