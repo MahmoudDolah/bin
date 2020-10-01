@@ -12,9 +12,9 @@ TO="$3"
 OUTPUT="$4"
 
 # This is where the actual cutting happens
-ffmpeg -i $VIDEO \
-	-ss $FROM \
-	-t $TO \
+ffmpeg -i "$VIDEO" \
+	-ss "$FROM" \
+	-t "$TO" \
 	-async 1 \
 	"$OUTPUT"
 
