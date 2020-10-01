@@ -8,9 +8,9 @@
 #  ce test.c test
 #
 
-code=$1
-output=$2
+code="$1"
+output="$2"
 
-gcc $code -o $output
+gcc "$code" -o "$output"
 
-./$output
+./"$output"
